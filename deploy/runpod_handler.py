@@ -69,6 +69,14 @@ def handler(job):
         if not run_train:
             return {"error": "Training module not found in this image"}
         # Existing training logic...
+        # 1. Pre-build manifests to include any new audio files
+        import subprocess
+        try:
+            print("--- Rebuilding manifests ---")
+            subprocess.run(["python", "musicgau/train/build_manifests.py"], check=True)
+        except Exception as e:
+            print(f"Warning: Manifest rebuild failed: {e}")
+
         dataset_root = Path(job_input.get('dataset_root', 'datasets/bachata_stems_v1'))
         out_dir = Path(job_input.get('out_dir', f"checkpoints/{job['id']}"))
         max_steps = int(job_input.get('max_steps', 5000))
