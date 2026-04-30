@@ -1,71 +1,81 @@
 import os
 import runpod
 from pathlib import Path
-from musicgau.train.run_audiocraft import train as run_train
+from musicgau.enrichment.stem_separator import MusicGAUStemSeparator
+from musicgau.enrichment.audio_to_midi import MusicGAUAudioToMidi
+# Assume training is still there
+try:
+    from musicgau.train.run_audiocraft import train as run_train
+except ImportError:
+    run_train = None
 
 def handler(job):
     """
-    RunPod Serverless handler for MusicGAU training.
-    Expected input:
-    {
-        "input": {
-            "dataset_root": "datasets/bachata_stems_v1",
-            "out_dir": "checkpoints/musicgau_bachata",
-            "max_steps": 5000,
-            "batch_size": 4,
-            "lr": 1e-4,
-            "dry_run": false,
-            "solver_config": "musicgen/musicgen_base_32khz"
-        }
-    }
+    GenAudius Unified Serverless Handler.
+    Supports: 
+    - "task": "generate"
+    - "task": "separate"
+    - "task": "midi"
+    - "task": "train"
     """
     job_input = job.get('input', {})
+    task = job_input.get('task', 'generate')
     
-    # Extract parameters with sensible defaults from the CLI script
-    dataset_root = Path(job_input.get('dataset_root', 'datasets/bachata_stems_v1'))
-    out_dir = Path(job_input.get('out_dir', 'checkpoints/musicgau_bachata'))
-    max_steps = int(job_input.get('max_steps', 5000))
-    batch_size = int(job_input.get('batch_size', 4))
-    lr = float(job_input.get('lr', 1e-4))
-    dry_run = bool(job_input.get('dry_run', False))
-    solver_config = job_input.get('solver_config', 'musicgen/musicgen_base_32khz')
-    
-    # Set environment variables if needed (AudioCraft/Dora often use USER)
-    if "USER" not in os.environ:
-        os.environ["USER"] = "runpod"
+    print(f"--- MusicGAU Engine: Processing Task [{task}] ---")
 
-    print(f"--- Starting Training Job ---")
-    print(f"Dataset Root: {dataset_root}")
-    print(f"Output Dir: {out_dir}")
-    print(f"Max Steps: {max_steps}")
-    print(f"Batch Size: {batch_size}")
-    
-    try:
-        # We call the train function directly. 
-        # Note: Typer functions can be called directly, but we need to pass all expected arguments
-        # if they don't have defaults in the function signature that we want to keep.
+    if task == "separate":
+        # Input: {"task": "separate", "audio_url": "http://..."}
+        audio_url = job_input.get('audio_url')
+        if not audio_url:
+            return {"error": "Missing audio_url"}
+        
+        # Download file (RunPod often needs to fetch from external or storage)
+        # For simplicity, we assume the path is local or pre-downloaded
+        # Or we use requests to fetch it
+        import requests
+        local_path = Path("/tmp") / f"input_{job['id']}.wav"
+        r = requests.get(audio_url)
+        with open(local_path, 'wb') as f:
+            f.write(r.content)
+            
+        separator = MusicGAUStemSeparator()
+        stems = separator.separate(str(local_path))
+        return {"status": "success", "data": stems}
+
+    elif task == "midi":
+        # Input: {"task": "midi", "audio_url": "http://..."}
+        audio_url = job_input.get('audio_url')
+        if not audio_url:
+            return {"error": "Missing audio_url"}
+            
+        import requests
+        local_path = Path("/tmp") / f"input_midi_{job['id']}.wav"
+        r = requests.get(audio_url)
+        with open(local_path, 'wb') as f:
+            f.write(r.content)
+            
+        transcriber = MusicGAUAudioToMidi()
+        midi_path = transcriber.transcribe(str(local_path))
+        return {"status": "success", "data": {"midi_url": midi_path}}
+
+    elif task == "train":
+        if not run_train:
+            return {"error": "Training module not found in this image"}
+        # Existing training logic...
+        dataset_root = Path(job_input.get('dataset_root', 'datasets/bachata_stems_v1'))
+        out_dir = Path(job_input.get('out_dir', f"checkpoints/{job['id']}"))
+        max_steps = int(job_input.get('max_steps', 5000))
+        
         run_train(
             dataset_root=dataset_root,
             out_dir=out_dir,
-            solver_config=solver_config,
             max_steps=max_steps,
-            batch_size=batch_size,
-            lr=lr,
-            dry_run=dry_run,
-            device="cuda" # Force CUDA on RunPod
+            device="cuda"
         )
-        
-        return {
-            "status": "success",
-            "message": f"Training completed for {max_steps} steps.",
-            "output_dir": str(out_dir)
-        }
-    except Exception as e:
-        print(f"Error during training: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return {"status": "success", "out_dir": str(out_dir)}
+
+    else:
+        return {"error": f"Unknown task type: {task}"}
 
 if __name__ == "__main__":
     runpod.serverless.start({"handler": handler})
