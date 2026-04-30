@@ -36,7 +36,7 @@ WORKDIR /opt/audiocraft
 RUN pip install --no-deps -e .
 
 # Install necessary dependencies manually (excluding 'av' which is already in conda)
-RUN pip install flashy hydra-core hydra-colorlog julius num2words numpy scipy sentencepiece transformers tqdm demucs librosa encodec pesq spacy antlr4-python3-runtime docopt dora_search
+RUN pip install flashy hydra-core hydra-colorlog julius num2words numpy scipy sentencepiece transformers tqdm demucs librosa encodec pesq spacy antlr4-python3-runtime docopt dora_search basic-pitch pedalboard mido spotipy pylast torchcodec
 
 WORKDIR /workspace
 COPY . /workspace/GenAudius_V1

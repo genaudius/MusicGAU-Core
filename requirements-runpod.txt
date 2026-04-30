@@ -12,3 +12,12 @@ librosa
 scipy
 runpod
 pyloudnorm
+demucs
+basic-pitch
+pedalboard
+mido
+spotipy
+pylast
+torchcodec
+fastapi
+uvicorn

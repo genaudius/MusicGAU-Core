@@ -20,8 +20,12 @@ class MusicGAUAudioToMidi:
             audio_path
         ]
         
+        # Add UTF-8 encoding to environment to handle emojis in basic-pitch output
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        
         try:
-            subprocess.run(command, check=True)
+            subprocess.run(command, check=True, env=env)
             
             # Basic Pitch saves as filename_basic_pitch.mid
             audio_file = Path(audio_path)
