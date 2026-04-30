@@ -1,88 +1,87 @@
 import random
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
-class BachataPrompter:
-    def __init__(self, styles_json_path: Optional[str] = None):
-        if styles_json_path and Path(styles_json_path).exists():
-            with open(styles_json_path, "r", encoding="utf-8") as f:
-                self.styles = json.load(f)
+class ChatGAU:
+    def __init__(self, config_path: str = "tropical_config.json"):
+        config_file = Path(config_path)
+        if config_file.exists():
+            with open(config_file, "r", encoding="utf-8") as f:
+                self.config = json.load(f)
         else:
-            # Diccionario robusto predeterminado
-            self.styles = {
-                "Aventura": {
-                    "tags": ["Estilo Urbano", "Requinto con Chorus", "Bajo Dominante", "R&B Fusion"],
-                    "moods": ["Amargue", "Romántico", "Agresivo"],
-                    "instrumentation": ["Ensamble completo", "Solo bajo y güira"],
-                    "panning": ["Bongo panorámico", "Güira al centro"]
-                },
-                "Romeo Santos": {
-                    "tags": ["Producción High-Tech", "Stems Cristalinos", "Ensamble Sofisticado", "Pop Influence"],
-                    "moods": ["Romántico", "Elegante", "Smooth"],
-                    "instrumentation": ["Ensamble con cuerdas", "Producción pulida"],
-                    "panning": ["Mezcla limpia", "Separación estéreo amplia"]
-                },
-                "Juan Luis Guerra": {
-                    "tags": ["Instrumentación en Vivo", "Acústico", "Percusión Compleja", "4:40 Swing"],
-                    "moods": ["Alegre", "Festivo", "Poético"],
-                    "instrumentation": ["Metales", "Percusión real", "Coros"],
-                    "panning": ["Sonido de orquesta", "Espacialidad natural"]
-                },
-                "Antony Santos": {
-                    "tags": ["Requinto Agresivo", "Alta Energía", "Derecho marcado", "Estilo de Guardia"],
-                    "moods": ["Amargue", "Bailable", "Calle"],
-                    "instrumentation": ["Requinto líder", "Güira rápida"],
-                    "panning": ["Percusión centrada", "Pegada fuerte"]
-                }
-            }
-        
-        self.bpms = [115, 120, 125, 128, 132]
-        self.keys = ["Do mayor", "Sol mayor", "Re mayor", "La menor", "Mi menor"]
+            self.config = {}
 
-    def generate_random_prompt(self, base_style: Optional[str] = None) -> str:
+        self.few_shot_examples = self.config.get("chatgau_logic", {}).get("few_shot_examples", [
+            "A high-energy 80s Merengue with sharp brass and fast tambora",
+            "A romantic modern Bachata, crystal clear requinto, 130 BPM"
+        ])
+
+    def humanize_json(self, metadata_json: Dict[str, Any]) -> str:
         """
-        Genera un prompt robusto y aleatorio siguiendo el ADN de la bachata.
+        Translates raw API JSON data into a human-like musical prompt.
+        ChatGAU Engine logic.
         """
-        style_name = base_style if base_style in self.styles else random.choice(list(self.styles.keys()))
-        style_data = self.styles[style_name]
+        info = metadata_json.get("info", {})
+        features = metadata_json.get("features", {})
+        tags = metadata_json.get("tags", [])
         
-        selected_tags = random.sample(style_data["tags"], k=random.randint(2, len(style_data["tags"])))
-        mood = random.choice(style_data["moods"])
-        inst = random.choice(style_data["instrumentation"])
-        pan = random.choice(style_data["panning"])
-        bpm = random.choice(self.bpms)
-        key = random.choice(self.keys)
+        genre = info.get("genre", "tropical music")
+        energy = features.get("energy", 0.5)
+        danceability = features.get("danceability", 0.5)
+        tempo = features.get("tempo", 120)
         
-        # Estructura robusta
-        prompt_parts = [
-            f"Bachata estilo {style_name}",
-            ", ".join(selected_tags),
-            f"Sentimiento {mood}",
-            inst,
-            pan,
-            f"{bpm} BPM",
-            f"en tono {key}",
-            "calidad de estudio, masterización profesional"
+        # Determine intensity descriptors
+        intensity = "vibrant and energetic" if energy > 0.7 else "smooth and balanced"
+        if energy < 0.4: intensity = "mellow and romantic"
+        
+        # Select random template structure to avoid robotic patterns
+        templates = [
+            f"A {intensity} {genre} track. It features {', '.join(tags[:3])}. {tempo:.0f} BPM.",
+            f"{genre.capitalize()} with a sentiment of {intensity}. Key elements include {random.choice(tags) if tags else 'organic percussion'}. Tempo is {tempo:.0f} BPM.",
+            f"Professional studio production of {genre}. Energy level is {energy*100:.0f}%, making it very {intensity}. Includes {', '.join(tags[:2])}.",
         ]
         
-        return ", ".join(prompt_parts)
-
-    def predict_best_prompt(self, desired_vibe: str) -> str:
-        """
-        Simulación de algoritmo de predicción basado en vibras.
-        """
-        # Aquí podríamos usar Spotify para buscar tracks con ese vibe y extraer tags.
-        # Por ahora, mapeamos palabras clave a estilos.
-        vibe = desired_vibe.lower()
-        if "calle" in vibe or "guardia" in vibe:
-            return self.generate_random_prompt("Antony Santos")
-        if "moderno" in vibe or "pop" in vibe:
-            return self.generate_random_prompt("Romeo Santos")
-        if "triste" in vibe or "amargue" in vibe:
-            return self.generate_random_prompt("Aventura")
+        base_prompt = random.choice(templates)
         
-        return self.generate_random_prompt()
+        # Add "Patch" logic (Instrumental control)
+        instrument_patches = metadata_json.get("patch", {})
+        add_instr = instrument_patches.get("add", [])
+        rem_instr = instrument_patches.get("remove", [])
+        
+        if add_instr:
+            base_prompt += f" Featuring additional {', '.join(add_instr)}."
+        if rem_instr:
+            base_prompt += f" Removing {', '.join(rem_instr)} from the standard arrangement."
+            
+        return base_prompt
 
-# Singleton para uso rápido
-prompter = BachataPrompter()
+    def generate_random_prompt(self, genre: str = "bachata") -> str:
+        """
+        Generates a prompt based on the tropical_config.json definitions.
+        """
+        genre_def = self.config.get("genre_definitions", {}).get(genre, {})
+        if not genre_def:
+            return random.choice(self.few_shot_examples)
+            
+        stems = genre_def.get("required_stems", [])
+        bpm_range = genre_def.get("typical_bpm", [120, 130])
+        bpm = random.randint(bpm_range[0], bpm_range[1])
+        
+        selected_stems = random.sample(stems, k=random.randint(3, len(stems)))
+        
+        return f"Authentic {genre} with {', '.join(selected_stems)}. {bpm} BPM, high fidelity tropical production."
+
+# Singleton for quick access
+chatgau = ChatGAU()
+
+if __name__ == "__main__":
+    # Test humanization
+    sample_json = {
+        "info": {"genre": "80s Merengue"},
+        "features": {"energy": 0.9, "tempo": 165},
+        "tags": ["brass", "fast tambora", "classic"],
+        "patch": {"add": ["piano pad"]}
+    }
+    print("ChatGAU Output:")
+    print(chatgau.humanize_json(sample_json))

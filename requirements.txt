@@ -20,6 +20,15 @@ sqlalchemy
 
 torch
 torchaudio
+# Advanced Processing
+demucs
+basic-pitch
+pyloudnorm
+pedalboard
+mido
+spotipy
+pylast
+
 # NOTE: Do NOT install `audiocraft` from PyPI on Windows here.
 # The PyPI package pins `av==11.0.0` which often triggers an FFmpeg build/link step
 # that fails on Windows (missing `avformat.lib`).
