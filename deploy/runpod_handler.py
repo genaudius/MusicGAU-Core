@@ -19,6 +19,13 @@ def handler(job):
     - "task": "train"
     """
     job_input = job.get('input', {})
+    
+    # --- Security Shield ---
+    api_key = job_input.get('api_key')
+    expected_key = os.getenv("GAU_API_KEY", "gau_master_secure_2026")
+    if api_key != expected_key:
+        return {"error": "Unauthorized: Invalid or missing API Key"}
+    
     task = job_input.get('task', 'generate')
     
     print(f"--- MusicGAU Engine: Processing Task [{task}] ---")

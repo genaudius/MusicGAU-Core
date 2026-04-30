@@ -1,7 +1,8 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Optional, List
-from fastapi import FastAPI, UploadFile, File, Query, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Query, BackgroundTasks, Depends, HTTPException, status
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 import uuid
 import shutil
@@ -10,6 +11,20 @@ from musicgau.enrichment.stem_separator import MusicGAUStemSeparator
 from musicgau.enrichment.audio_to_midi import MusicGAUAudioToMidi
 
 app = FastAPI(title="GenAudius Music Engine", version="1.0.0", description="The Latin Tropical AI Music Engine")
+
+# --- Security ---
+API_KEY_NAME = "x-api-key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def get_api_key(api_key: str = Depends(api_key_header)):
+    # In production, this should be a real key from env or DB
+    expected_key = os.getenv("GAU_API_KEY", "gau_master_secure_2026")
+    if api_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+        )
+    return api_key
 
 # --- GenAudius Models ---
 
@@ -32,14 +47,14 @@ class TaskResponse(BaseModel):
 
 # --- Endpoints (Kie-Aligned) ---
 
-@app.get("/api/v1/chat/credit")
+@app.get("/api/v1/chat/credit", dependencies=[Depends(get_api_key)])
 def get_credits():
     """
     Check remaining credits.
     """
     return {"code": 200, "msg": "success", "data": "Unlimited (MusicGAU Local Runtime)"}
 
-@app.get("/api/v1/models")
+@app.get("/api/models", dependencies=[Depends(get_api_key)])
 def list_models():
     """
     List available MusicGAU models.
@@ -53,10 +68,10 @@ def list_models():
         ]
     }
 
-@app.post("/api/v1/generate")
+@app.post("/api/v1/generate", dependencies=[Depends(get_api_key)])
 def generate(body: GenerateBody):
     """
-    Kie-style music generation.
+    GenAudius music generation.
     """
     task_id = str(uuid.uuid4())
     return {
@@ -65,7 +80,7 @@ def generate(body: GenerateBody):
         "data": {"taskId": task_id, "status": "submitted"}
     }
 
-@app.post("/api/v1/vocal-removal/generate")
+@app.post("/api/v1/vocal-removal/generate", dependencies=[Depends(get_api_key)])
 def separate_stems(background_tasks: BackgroundTasks, audio: UploadFile = File(...)):
     """
     Vocal & Instrument Stem Separation.
@@ -90,7 +105,7 @@ def separate_stems(background_tasks: BackgroundTasks, audio: UploadFile = File(.
         "data": {"taskId": task_id, "status": "submitted"}
     }
 
-@app.get("/api/v1/generate/record-info")
+@app.get("/api/v1/generate/record-info", dependencies=[Depends(get_api_key)])
 def get_record_info(taskId: str = Query(...)):
     """
     Check task status and get media URLs.
@@ -106,7 +121,7 @@ def get_record_info(taskId: str = Query(...)):
         }
     }
 
-@app.post("/api/v1/midi")
+@app.post("/api/v1/midi", dependencies=[Depends(get_api_key)])
 def generate_midi(background_tasks: BackgroundTasks, audio: UploadFile = File(...)):
     """
     Extract MIDI from Audio.
@@ -131,7 +146,7 @@ def generate_midi(background_tasks: BackgroundTasks, audio: UploadFile = File(..
         "data": {"taskId": task_id, "status": "submitted"}
     }
 
-@app.post("/api/v1/extend")
+@app.post("/api/v1/extend", dependencies=[Depends(get_api_key)])
 def extend_audio(audio: UploadFile = File(...), seconds: int = 30):
     """
     Lengthen existing audio.
@@ -143,7 +158,7 @@ def extend_audio(audio: UploadFile = File(...), seconds: int = 30):
         "data": {"taskId": task_id, "status": "submitted"}
     }
 
-@app.post("/api/v1/wav/generate")
+@app.post("/api/v1/wav/generate", dependencies=[Depends(get_api_key)])
 def convert_to_wav(audio: UploadFile = File(...)):
     """
     Convert any format to high-fidelity WAV.
