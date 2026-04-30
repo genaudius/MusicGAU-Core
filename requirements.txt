@@ -1,0 +1,27 @@
+numpy<2
+pandas
+tqdm
+rich
+typer
+# AudioCraft pulls spacy; many spacy builds still require pydantic v1.
+pydantic<2
+python-dotenv
+requests
+
+soundfile
+librosa
+scipy
+
+# Keep API optional/compatible with pydantic v1
+fastapi<0.100
+uvicorn[standard]
+
+sqlalchemy
+
+torch
+torchaudio
+# NOTE: Do NOT install `audiocraft` from PyPI on Windows here.
+# The PyPI package pins `av==11.0.0` which often triggers an FFmpeg build/link step
+# that fails on Windows (missing `avformat.lib`).
+# We use the local `audiocraft_repo` already present on this machine for training.
+

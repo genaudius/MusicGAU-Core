@@ -1,0 +1,12 @@
+- solver=musicgen/musicgen_base_32khz
+- ++datasource.train=datasets/bachata_stems_v1/manifests/train.enriched.jsonl.gz
+- ++datasource.valid=datasets/bachata_stems_v1/manifests/valid.jsonl.gz
+- ++datasource.evaluate=datasets/bachata_stems_v1/manifests/test.jsonl.gz
+- ++datasource.max_sample_rate=32000
+- ++datasource.max_channels=1
+- optim.lr=0.0001
+- ++dataset.batch_size=4
+- ++schedule.total_updates=5000
+- ++channels=1
+- ++logging.dir=checkpoints/musicgau_bachata
+- ++mp_start_method=spawn

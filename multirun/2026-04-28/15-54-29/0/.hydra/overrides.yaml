@@ -1,0 +1,8 @@
+- +dataset.train.manifest=datasets/bachata_stems_v1/manifests/train.enriched.jsonl.gz
+- +dataset.valid.manifest=datasets/bachata_stems_v1/manifests/valid.jsonl.gz
+- optim.lr=0.0001
+- +dataset.batch_size=4
+- +schedule.total_updates=5000
+- +solver.musicgen.pretrained=facebook/musicgen-small
+- +logging.dir=checkpoints/musicgau_bachata_lora
+- ++mp_start_method=spawn

@@ -1,0 +1,51 @@
+{
+  "model_name": "MusicGAU-Tropical-V1",
+  "organization": "Gen Audius LLC",
+  "version": "1.0.0",
+  "sampling_rate": 44100,
+  "precision": "fp16",
+  "primary_focus": "Latin Tropical",
+  "audio_processing": {
+    "normalization": "pyloudnorm",
+    "target_lufs": -14.0,
+    "peak_normalization": 1.0,
+    "segment_length_s": 30
+  },
+  "genre_definitions": {
+    "bachata": {
+      "required_stems": ["requinto_guitar", "segunda_guitar", "bass_bachata", "bongo", "guira"],
+      "typical_bpm": [115, 135],
+      "energy_range": [0.4, 0.7],
+      "vst_presets": "pedalboard_clean_chorus_guitar"
+    },
+    "merengue": {
+      "required_stems": ["tambora", "guira_merengue", "conga", "piano_montuno", "brass_section", "bass_slap"],
+      "typical_bpm": [140, 180],
+      "energy_range": [0.8, 1.0],
+      "vst_presets": "pedalboard_bright_brass_hall"
+    },
+    "bolero": {
+      "required_stems": ["piano_ballad", "acoustic_guitar", "bongo_soft", "strings_pad", "upright_bass"],
+      "typical_bpm": [70, 100],
+      "energy_range": [0.2, 0.5],
+      "vst_presets": "pedalboard_vintage_warm_reverb"
+    }
+  },
+  "api_mapping": {
+    "spotify": {
+      "features": ["danceability", "energy", "valence", "tempo"],
+      "analysis": ["sections", "segments", "beats"]
+    },
+    "lastfm": {
+      "tag_depth": 5,
+      "era_handling": true
+    }
+  },
+  "chatgau_logic": {
+    "prompt_randomization": true,
+    "few_shot_examples": [
+      "A high-energy 80s Merengue with sharp brass and fast tambora",
+      "A romantic modern Bachata, crystal clear requinto, 130 BPM"
+    ]
+  }
+}

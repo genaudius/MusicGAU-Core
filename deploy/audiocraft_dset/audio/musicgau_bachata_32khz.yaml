@@ -1,0 +1,10 @@
+# @package __global__
+
+datasource:
+  max_sample_rate: 32000
+  max_channels: 1
+
+  train: datasets/bachata_stems_v1/manifests/train.enriched.jsonl.gz
+  valid: datasets/bachata_stems_v1/manifests/valid.jsonl.gz
+  evaluate: datasets/bachata_stems_v1/manifests/test.jsonl.gz
+  generate: null

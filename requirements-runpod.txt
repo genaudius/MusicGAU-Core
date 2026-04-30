@@ -1,0 +1,14 @@
+# Used by Dockerfile: base image already ships torch/torchaudio with CUDA.
+numpy<2
+pandas
+tqdm
+rich
+typer
+pydantic<2
+python-dotenv
+requests
+soundfile
+librosa
+scipy
+runpod
+pyloudnorm

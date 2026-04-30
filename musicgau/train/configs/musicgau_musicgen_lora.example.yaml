@@ -1,0 +1,32 @@
+# Example config knobs for training MusicGAU via AudioCraft (MusicGen + LoRA).
+#
+# This file is intentionally an example: AudioCraft uses Hydra/Dora and the exact
+# config tree keys can differ by version. We keep a stable "MusicGAU layer" and
+# generate hydra overrides from it in `musicgau/train/run_audiocraft.py`.
+
+musicgau:
+  model_name: MusicGAU
+  base_model: facebook/musicgen-small
+  sample_rate: 32000
+  dataset_root: datasets/musicgau_clips
+  train_manifest: ${musicgau.dataset_root}/manifests/train.jsonl.gz
+  valid_manifest: ${musicgau.dataset_root}/manifests/valid.jsonl.gz
+  out_dir: checkpoints/musicgau
+
+train:
+  max_steps: 5000
+  batch_size: 4
+  lr: 1e-4
+  seed: 1234
+
+lora:
+  enabled: true
+  r: 8
+  alpha: 16
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - out_proj
+
