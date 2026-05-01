@@ -4,13 +4,13 @@ pandas
 tqdm
 rich
 typer
-pydantic<2
+pydantic<2.0.0
 python-dotenv
 requests
 soundfile
 librosa
 scipy
-runpod
+runpod>=1.6.2
 pyloudnorm
 demucs
 basic-pitch
@@ -19,5 +19,6 @@ mido
 spotipy
 pylast
 torchcodec
-fastapi
+fastapi==0.99.1
 uvicorn
+boto3
