@@ -29,6 +29,12 @@
       "typical_bpm": [70, 100],
       "energy_range": [0.2, 0.5],
       "vst_presets": "pedalboard_vintage_warm_reverb"
+    },
+    "merengue_tipico": {
+      "required_stems": ["accordion", "guira_tipica", "tambora", "bass_tipico", "sax_alto"],
+      "typical_bpm": [150, 190],
+      "energy_range": [0.9, 1.0],
+      "vst_presets": "pedalboard_bright_accordion"
     }
   },
   "api_mapping": {

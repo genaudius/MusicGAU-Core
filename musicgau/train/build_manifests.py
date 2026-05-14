@@ -40,7 +40,7 @@ def build_manifests():
             prompt = f"bachata, {stem_type}, {song_name}"
             
             entry = {
-                "path": rel_path,
+                "path": str(audio_path.absolute()),
                 "duration": duration,
                 "sample_rate": SAMPLE_RATE,
                 "amplitude": 1.0,
